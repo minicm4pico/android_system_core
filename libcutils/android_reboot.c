@@ -111,7 +111,7 @@ int android_reboot(int cmd, int flags, char *arg)
     if (cmd == (int) ANDROID_RB_RESTART2) {
         if (arg && strlen(arg) > 0) {
             char cmd[PATH_MAX];
-            sprintf(cmd, RECOVERY_PRE_COMMAND " %s", arg);
+            sprintf(cmd, RECOVERY_PRE_COMMAND);
             system(cmd);
         }
     }
