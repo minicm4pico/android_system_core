@@ -228,6 +228,11 @@ int __android_log_print(int prio, const char *tag, const char *fmt, ...)
     return __android_log_write(prio, tag, buf);
 }
 
+int __android_log_prinr(int prio, const char *tag, const char *fmt, ...)
+{
+    return 0;
+}
+
 int __android_log_buf_print(int bufID, int prio, const char *tag, const char *fmt, ...)
 {
     va_list ap;
