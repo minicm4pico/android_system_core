@@ -601,6 +601,10 @@ static void transport_registration_func(int _fd, unsigned ev, void *data)
             free(t->product);
         if (t->serial)
             free(t->serial);
+        if (t->model)
+            free(t->model);
+        if (t->device)
+            free(t->device);
         if (t->devpath)
             free(t->devpath);
 
@@ -920,9 +924,6 @@ atransport *find_transport(const char *serial)
     adb_mutex_lock(&transport_lock);
     for(t = transport_list.next; t != &transport_list; t = t->next) {
         if (t->serial && !strcmp(serial, t->serial)) {
-            break;
-        }
-        if (t->devpath && !strcmp(serial, t->devpath)) {
             break;
         }
      }
