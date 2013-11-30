@@ -418,6 +418,16 @@ asocket *create_local_service_socket(const char *name)
 
     s = create_local_socket(fd);
     D("LS(%d): bound to '%s' via %d\n", s->id, name, fd);
+
+#if !ADB_HOST
+    if ((!strncmp(name, "root:", 5) && getuid() != 0)
+        || !strncmp(name, "usb:", 4)
+        || !strncmp(name, "tcpip:", 6)) {
+        D("LS(%d): enabling exit_on_close\n", s->id);
+        s->exit_on_close = 1;
+    }
+#endif
+
     return s;
 }
 
