@@ -121,10 +121,12 @@ void help()
         "                                   dev:<character device name>\n"
         "                                   jdwp:<process pid> (remote only)\n"
         "  adb jdwp                     - list PIDs of processes hosting a JDWP transport\n"
-        "  adb install [-l] [-r] [-s] <file> - push this package file to the device and install it\n"
+        "  adb install [-l] [-r] [-s] [--algo <algorithm name> --key <hex-encoded key> --iv <hex-encoded iv>] <file>\n"
+        "                               - push this package file to the device and install it\n"
         "                                 ('-l' means forward-lock the app)\n"
         "                                 ('-r' means reinstall the app, keeping its data)\n"
         "                                 ('-s' means install on SD card instead of internal storage)\n"
+        "                                 ('--algo', '--key', and '--iv' mean the file is encrypted already)\n"
         "  adb uninstall [-k] <package> - remove this app package from the device\n"
         "                                 ('-k' means keep the data and cache directories)\n"
         "  adb bugreport                - return all information from the device\n"
@@ -1452,6 +1454,7 @@ int install_app(transport_type transport, char* serial, int argc, char** argv)
     int file_arg = -1;
     int err;
     int i;
+    int verify_apk = 1;
 
     for (i = 1; i < argc; i++) {
         if (*argv[i] != '-') {
@@ -1462,6 +1465,15 @@ int install_app(transport_type transport, char* serial, int argc, char** argv)
             i++;
         } else if (!strcmp(argv[i], "-s")) {
             where = SD_DEST;
+        } else if (!strcmp(argv[i], "--algo")) {
+            verify_apk = 0;
+            i++;
+        } else if (!strcmp(argv[i], "--iv")) {
+            verify_apk = 0;
+            i++;
+        } else if (!strcmp(argv[i], "--key")) {
+            verify_apk = 0;
+            i++;
         }
     }
 
@@ -1493,7 +1505,7 @@ int install_app(transport_type transport, char* serial, int argc, char** argv)
         }
     }
 
-    err = do_sync_push(apk_file, apk_dest, 1 /* verify APK */);
+    err = do_sync_push(apk_file, apk_dest, verify_apk);
     if (err) {
         return err;
     } else {
