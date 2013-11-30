@@ -84,8 +84,8 @@ void help()
         "                                 returns an error if more than one USB device is present.\n"
         " -e                            - directs command to the only running emulator.\n"
         "                                 returns an error if more than one emulator is running.\n"
-        " -s <specific device>          - directs command to the device or emulator with the given\n"
-        "                                 serial number or qualifier. Overrides ANDROID_SERIAL\n"
+        " -s <serial number>            - directs command to the USB device or emulator with\n"
+        "                                 the given serial number. Overrides ANDROID_SERIAL\n"
         "                                 environment variable.\n"
         " -p <product name or path>     - simple product name like 'sooner', or\n"
         "                                 a relative/absolute path to a product\n"
@@ -93,8 +93,7 @@ void help()
         "                                 If -p is not specified, the ANDROID_PRODUCT_OUT\n"
         "                                 environment variable is used, which must\n"
         "                                 be an absolute path.\n"
-        " devices [-l]                  - list all connected devices\n"
-        "                                 ('-l' will also list device qualifiers)\n"
+        " devices                       - list all connected devices\n"
         " connect <host>[:<port>]       - connect to a device via TCP/IP\n"
         "                                 Port 5555 is used by default if no port number is specified.\n"
         " disconnect [<host>[:<port>]]  - disconnect from a TCP/IP device.\n"
@@ -121,12 +120,10 @@ void help()
         "                                   dev:<character device name>\n"
         "                                   jdwp:<process pid> (remote only)\n"
         "  adb jdwp                     - list PIDs of processes hosting a JDWP transport\n"
-        "  adb install [-l] [-r] [-s] [--algo <algorithm name> --key <hex-encoded key> --iv <hex-encoded iv>] <file>\n"
-        "                               - push this package file to the device and install it\n"
+        "  adb install [-l] [-r] [-s] <file> - push this package file to the device and install it\n"
         "                                 ('-l' means forward-lock the app)\n"
         "                                 ('-r' means reinstall the app, keeping its data)\n"
         "                                 ('-s' means install on SD card instead of internal storage)\n"
-        "                                 ('--algo', '--key', and '--iv' mean the file is encrypted already)\n"
         "  adb uninstall [-k] <package> - remove this app package from the device\n"
         "                                 ('-k' means keep the data and cache directories)\n"
         "  adb bugreport                - return all information from the device\n"
@@ -160,7 +157,6 @@ void help()
         "  adb kill-server              - kill the server if it is running\n"
         "  adb get-state                - prints: offline | bootloader | device\n"
         "  adb get-serialno             - prints: <serial-number>\n"
-        "  adb get-devpath              - prints: <device-path>\n"
         "  adb status-window            - continuously print device status for a specified device\n"
         "  adb remount                  - remounts the /system partition on the device read-write\n"
         "  adb reboot [bootloader|recovery] - reboots the device, optionally into the bootloader or recovery program\n"
@@ -882,7 +878,7 @@ int adb_commandline(int argc, char **argv)
                 argc--;
                 argv++;
             } else {
-                product = argv[0] + 2;
+                product = argv[1] + 2;
             }
             gProductOutPath = find_product_out_path(product);
             if (gProductOutPath == NULL) {
@@ -935,16 +931,7 @@ top:
 
     if(!strcmp(argv[0], "devices")) {
         char *tmp;
-        char *listopt;
-        if (argc < 2)
-            listopt = "";
-        else if (argc == 2 && !strcmp(argv[1], "-l"))
-            listopt = argv[1];
-        else {
-            fprintf(stderr, "Usage: adb devices [-l]\n");
-            return 1;
-        }
-        snprintf(buf, sizeof buf, "host:%s%s", argv[0], listopt);
+        snprintf(buf, sizeof buf, "host:%s", argv[0]);
         tmp = adb_query(buf);
         if(tmp) {
             printf("List of devices attached \n");
@@ -1217,8 +1204,7 @@ top:
     /* passthrough commands */
 
     if(!strcmp(argv[0],"get-state") ||
-        !strcmp(argv[0],"get-serialno") ||
-        !strcmp(argv[0],"get-devpath"))
+        !strcmp(argv[0],"get-serialno"))
     {
         char *tmp;
 
@@ -1454,7 +1440,6 @@ int install_app(transport_type transport, char* serial, int argc, char** argv)
     int file_arg = -1;
     int err;
     int i;
-    int verify_apk = 1;
 
     for (i = 1; i < argc; i++) {
         if (*argv[i] != '-') {
@@ -1465,15 +1450,6 @@ int install_app(transport_type transport, char* serial, int argc, char** argv)
             i++;
         } else if (!strcmp(argv[i], "-s")) {
             where = SD_DEST;
-        } else if (!strcmp(argv[i], "--algo")) {
-            verify_apk = 0;
-            i++;
-        } else if (!strcmp(argv[i], "--iv")) {
-            verify_apk = 0;
-            i++;
-        } else if (!strcmp(argv[i], "--key")) {
-            verify_apk = 0;
-            i++;
         }
     }
 
@@ -1505,7 +1481,7 @@ int install_app(transport_type transport, char* serial, int argc, char** argv)
         }
     }
 
-    err = do_sync_push(apk_file, apk_dest, verify_apk);
+    err = do_sync_push(apk_file, apk_dest, 1 /* verify APK */);
     if (err) {
         return err;
     } else {

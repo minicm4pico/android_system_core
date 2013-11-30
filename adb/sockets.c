@@ -418,16 +418,6 @@ asocket *create_local_service_socket(const char *name)
 
     s = create_local_socket(fd);
     D("LS(%d): bound to '%s' via %d\n", s->id, name, fd);
-
-#if !ADB_HOST
-    if ((!strncmp(name, "root:", 5) && getuid() != 0)
-        || !strncmp(name, "usb:", 4)
-        || !strncmp(name, "tcpip:", 6)) {			
-        D("LS(%d): enabling exit_on_close\n", s->id);
-        s->exit_on_close = 1;
-    }
-#endif
-
     return s;
 }
 
@@ -601,30 +591,12 @@ unsigned unhex(unsigned char *s, int len)
     return n;
 }
 
-#define PREFIX(str) { str, sizeof(str) - 1 }
-static const struct prefix_struct {
-    const char *str;
-    const size_t len;
-} prefixes[] = {
-    PREFIX("usb:"),
-    PREFIX("product:"),
-    PREFIX("model:"),
-    PREFIX("device:"),
-};
-static const int num_prefixes = (sizeof(prefixes) / sizeof(prefixes[0]));
-
 /* skip_host_serial return the position in a string
    skipping over the 'serial' parameter in the ADB protocol,
    where parameter string may be a host:port string containing
    the protocol delimiter (colon). */
 char *skip_host_serial(char *service) {
     char *first_colon, *serial_end;
-    int i;
-
-    for (i = 0; i < num_prefixes; i++) {
-        if (!strncmp(service, prefixes[i].str, prefixes[i].len))
-            return strchr(service + prefixes[i].len, ':');
-    }
 
     first_colon = strchr(service, ':');
     if (!first_colon) {
