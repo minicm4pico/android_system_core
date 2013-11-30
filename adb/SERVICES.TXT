@@ -16,6 +16,7 @@ host:kill
     ADB client detects that an obsolete server is running after an
     upgrade.
 
+host:devices
 host:devices-l
     Ask to return the list of available Android devices and their
     state. devices-l includes the device paths in the state.
