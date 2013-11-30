@@ -1056,7 +1056,7 @@ void connect_device(char* host, char* buffer, int buffer_size)
 
     strncpy(hostbuf, host, sizeof(hostbuf) - 1);
     if (portstr) {
-        if (portstr - host >= (ptrdiff_t)sizeof(hostbuf)) {
+        if ((unsigned int)(portstr - host) >= (ptrdiff_t)sizeof(hostbuf)) {
             snprintf(buffer, buffer_size, "bad host name %s", host);
             return;
         }
