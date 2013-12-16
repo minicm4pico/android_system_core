@@ -274,6 +274,9 @@ on boot
     chown system system /sys/block/mmcblk0/queue/scheduler
     chmod 0664 /sys/block/mmcblk0/queue/scheduler
 
+    chown system system /sys/android_touch/s2wswitch
+    chmod 0664 /sys/android_touch/s2wswitch
+
 # Define TCP buffer sizes for various networks
 #   ReadMin, ReadInitial, ReadMax, WriteMin, WriteInitial, WriteMax,
     setprop net.tcp.buffersize.default 4096,87380,110208,4096,16384,110208
@@ -444,6 +447,22 @@ service surfaceflinger /system/bin/surfaceflinger
     user system
     group graphics
     onrestart restart zygote
+
+# compcache - handle at boot
+service compcache /system/bin/handle_compcache
+    class main
+    user root
+    group root
+    disabled
+
+on property:persist.service.zram=10
+    start compcache
+
+on property:persist.service.zram=18
+    start compcache
+
+on property:persist.service.zram=26
+    start compcache
 
 service zygote /system/bin/app_process -Xzygote /system/bin --zygote --start-system-server
     class main
